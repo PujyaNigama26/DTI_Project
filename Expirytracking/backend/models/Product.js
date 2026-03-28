@@ -4,10 +4,12 @@ const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { type: String, required: true },
   quantity: { type: Number, required: true },
-  expiryDate: { type: String, required: true }, // Format: YYYY-MM-DD
+  expiryDate: { type: String, required: true },
   price: { type: Number, required: true },
-  supplier: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
+  supplier: { type: String, required: true }
+}, {
+  timestamps: true
 });
 
-module.exports = mongoose.model('Product', productSchema);
+const Product = mongoose.model('Product', productSchema);
+module.exports = Product;

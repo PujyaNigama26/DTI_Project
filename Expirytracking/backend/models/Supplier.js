@@ -2,11 +2,13 @@ const mongoose = require('mongoose');
 
 const supplierSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  contactPerson: { type: String, required: true },
+  contactPerson: { type: String },
   email: { type: String, required: true },
   phone: { type: String, required: true },
-  status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
-  createdAt: { type: Date, default: Date.now }
+  status: { type: String, default: 'Active' }
+}, {
+  timestamps: true
 });
 
-module.exports = mongoose.model('Supplier', supplierSchema);
+const Supplier = mongoose.model('Supplier', supplierSchema);
+module.exports = Supplier;
