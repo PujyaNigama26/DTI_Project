@@ -4,8 +4,6 @@ const Sale = require('../models/Sale');
 const Product = require('../models/Product');
 const { protect } = require('../middleware/authMiddleware');
 
-router.use(protect);
-
 const gracePeriodMap = {
   'Dairy': 2,
   'Bakery': 2,
@@ -15,6 +13,108 @@ const gracePeriodMap = {
   'Snacks': 5,
   'Medicines': 0
 };
+
+// Public endpoint for Flutter app to record purchases
+router.post('/flutter-purchase', async (req, res) => {
+  try {
+    const { storeId, productName, quantity, soldAtPrice } = req.body;
+    
+    if (!storeId || !productName || !quantity) {
+      return res.status(400).json({ message: 'Missing required fields: storeId, productName, or quantity' });
+    }
+
+    // Find product
+    const product = await Product.findOne({ name: productName, userId: storeId });
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    let remainingToDeduct = quantity;
+    let saleAmount = 0;
+
+    const graceDays = (product.gracePeriodDays !== undefined && product.gracePeriodDays > 0) 
+                         ? product.gracePeriodDays 
+                         : (gracePeriodMap[product.category] || 0);
+                         
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (product.batches && product.batches.length > 0) {
+      // Validate sufficient stock
+      let validStock = 0;
+      product.batches.forEach(b => {
+          if (b.quantity <= 0) return;
+          const expDate = new Date(b.expiryDate);
+          const diffTime = expDate - today;
+          const daysLeft = Math.ceil(diffTime / (1000 * 3600 * 24));
+          const isExpired = daysLeft < 0 ? (Math.abs(daysLeft) > graceDays) : (daysLeft === 0 && graceDays === 0);
+          if (!isExpired) validStock += b.quantity;
+      });
+
+      if (validStock < quantity) {
+          return res.status(400).json({ message: 'Insufficient valid inventory for purchase' });
+      }
+
+      // Sort batches by earliest expiry Date (FIFO)
+      product.batches.sort((a,b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+
+      for (let i = 0; i < product.batches.length; i++) {
+        if (remainingToDeduct <= 0) break;
+        
+        let batch = product.batches[i];
+        if (batch.quantity <= 0) continue;
+
+        const expDate = new Date(batch.expiryDate);
+        const diffTime = expDate - today;
+        const daysLeft = Math.ceil(diffTime / (1000 * 3600 * 24));
+        const isExpired = daysLeft < 0 ? (Math.abs(daysLeft) > graceDays) : (daysLeft === 0 && graceDays === 0);
+        
+        if (isExpired) continue;
+
+        const deduct = Math.min(batch.quantity, remainingToDeduct);
+        batch.quantity -= deduct;
+        remainingToDeduct -= deduct;
+        
+        // Use provided explicit sale price from Flutter if available, otherwise fallback to standard logic
+        if (soldAtPrice !== undefined) {
+           saleAmount += (deduct * soldAtPrice);
+        } else {
+           const isInGracePeriod = daysLeft < 0 ? (Math.abs(daysLeft) <= graceDays) : (daysLeft === 0 && graceDays > 0);
+           if (isInGracePeriod) {
+              saleAmount += (deduct * batch.unitCostPrice);
+           } else {
+              saleAmount += (deduct * batch.unitSellingPrice);
+           }
+        }
+      }
+    } else {
+      // Legacy fallback
+      if (product.quantity < quantity) {
+        return res.status(400).json({ message: 'Insufficient inventory quantity' });
+      }
+      product.quantity -= remainingToDeduct;
+      saleAmount += (quantity * (soldAtPrice || product.price));
+    }
+
+    // Create the sale
+    const sale = new Sale({
+      userId: storeId,
+      productName,
+      productId: product._id,
+      quantity,
+      amount: saleAmount
+    });
+    
+    await sale.save();
+    await product.save();
+
+    res.status(201).json({ message: 'Purchase successful', saleId: sale._id, newStock: product.quantity });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+router.use(protect);
+
+
 
 // Get all sales
 router.get('/', async (req, res) => {
