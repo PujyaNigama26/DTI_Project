@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 // Create or update the store settings
 router.put('/', async (req, res) => {
   try {
-    const { storeName, contact, email, address } = req.body;
+    const { storeName, contact, email, address, storeLocation } = req.body;
     let store = await Store.findOne({ userId: req.user._id });
     
     if (store) {
@@ -35,9 +35,10 @@ router.put('/', async (req, res) => {
       store.contact = contact;
       store.email = email;
       store.address = address;
+      store.storeLocation = storeLocation;
       store = await store.save();
     } else {
-      store = new Store({ userId: req.user._id, storeName, contact, email, address });
+      store = new Store({ userId: req.user._id, storeName, contact, email, address, storeLocation });
       store = await store.save();
     }
     

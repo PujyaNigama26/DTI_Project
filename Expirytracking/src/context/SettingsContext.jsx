@@ -8,6 +8,7 @@ const defaultSettings = {
   contact: '',
   address: '',
   email: '',
+  storeLocation: ''
 };
 
 export function SettingsProvider({ children }) {
@@ -23,7 +24,8 @@ export function SettingsProvider({ children }) {
             storeName: data.storeName,
             contact: data.contact,
             address: data.address,
-            email: data.email
+            email: data.email,
+            storeLocation: data.storeLocation || ''
           });
         }
       } catch (err) {

@@ -29,6 +29,7 @@ export default function Settings() {
           { name: 'contact', label: 'Contact Number' },
           { name: 'email', label: 'Email Address' },
           { name: 'address', label: 'Address' },
+          { name: 'storeLocation', label: 'Store Map Link / GPS Location' },
         ].map(({ name, label }) => (
           <div key={name}>
             <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>

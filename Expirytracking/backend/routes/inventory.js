@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const Waste = require('../models/Waste');
+const Store = require('../models/Store');
 const { protect } = require('../middleware/authMiddleware');
 
 const gracePeriodMap = {
@@ -205,6 +206,12 @@ router.get('/flutter-deals', async (req, res) => {
     const filter = req.query.storeId ? { userId: req.query.storeId } : {};
     const products = await Product.find(filter);
     
+    // Also fetch the store to get the location if storeId is provided
+    let storeInfo = null;
+    if (req.query.storeId) {
+      storeInfo = await Store.findOne({ userId: req.query.storeId });
+    }
+    
     const flutterDeals = [];
 
     products.forEach(rawProduct => {
@@ -248,7 +255,9 @@ router.get('/flutter-deals', async (req, res) => {
         if (b.daysLeft <= 14 || b.isInGracePeriod) {
             flutterDeals.push({
               _id: `${item.id}-${b.batchId || b._id}`, // Just an ID for Flutter to identify it
-              storeId: "STORE_1", // You can change this if you have multiple stores later
+              storeId: req.query.storeId || "GLOBAL",
+              storeLocation: storeInfo ? (storeInfo.storeLocation || storeInfo.address) : "Unknown Location",
+              storeName: storeInfo ? storeInfo.storeName : "Unknown Store",
               productName: item.name,
               category: item.category,
               originalPrice: P_base,
