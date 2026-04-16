@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Store = require('../models/Store');
+const { protect } = require('../middleware/authMiddleware');
+
+router.use(protect);
 
 // Get the store settings
 router.get('/', async (req, res) => {
   try {
-    const store = await Store.findOne();
+    const store = await Store.findOne({ userId: req.user._id });
     if (!store) {
       // Return a default store if none exists
       return res.json({
@@ -25,7 +28,7 @@ router.get('/', async (req, res) => {
 router.put('/', async (req, res) => {
   try {
     const { storeName, contact, email, address } = req.body;
-    let store = await Store.findOne();
+    let store = await Store.findOne({ userId: req.user._id });
     
     if (store) {
       store.storeName = storeName;
@@ -34,7 +37,7 @@ router.put('/', async (req, res) => {
       store.address = address;
       store = await store.save();
     } else {
-      store = new Store({ storeName, contact, email, address });
+      store = new Store({ userId: req.user._id, storeName, contact, email, address });
       store = await store.save();
     }
     

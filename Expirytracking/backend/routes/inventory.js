@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const Waste = require('../models/Waste');
+const { protect } = require('../middleware/authMiddleware');
 
 const gracePeriodMap = {
   'Dairy': 2,
@@ -93,9 +94,9 @@ const ensureBatches = (p) => {
 };
 
 // Get all products
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.find({ userId: req.user._id }).sort({ createdAt: -1 });
     const mapped = products.map(p => ensureBatches(p._doc));
     res.json(mapped);
   } catch (err) {
@@ -104,9 +105,9 @@ router.get('/', async (req, res) => {
 });
 
 // Get algorithmically optimized dynamic discounts per batch
-router.get('/discounts', async (req, res) => {
+router.get('/discounts', protect, async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find({ userId: req.user._id });
     
     const discountData = [];
 
@@ -201,7 +202,8 @@ router.get('/discounts', async (req, res) => {
 // Bridge for Flutter App: Returns Deals in the format the Flutter app's Deal.js expects
 router.get('/flutter-deals', async (req, res) => {
   try {
-    const products = await Product.find();
+    const filter = req.query.storeId ? { userId: req.query.storeId } : {};
+    const products = await Product.find(filter);
     
     const flutterDeals = [];
 
@@ -266,7 +268,7 @@ router.get('/flutter-deals', async (req, res) => {
 });
 
 // Create a product
-router.post('/', async (req, res) => {
+router.post('/', protect, async (req, res) => {
   try {
     const { name, category, supplier, batches, quantity, costPrice, price, expiryDate, gracePeriodDays } = req.body;
     
@@ -279,7 +281,7 @@ router.post('/', async (req, res) => {
     }];
 
     const product = new Product({
-      name, category, supplier, gracePeriodDays, batches: newBatches
+      userId: req.user._id, name, category, supplier, gracePeriodDays, batches: newBatches
     });
 
     const savedProduct = await product.save();
@@ -290,10 +292,10 @@ router.post('/', async (req, res) => {
 });
 
 // Update a product (Legacy root update)
-router.put('/:id', async (req, res) => {
+router.put('/:id', protect, async (req, res) => {
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id, 
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id }, 
       req.body, 
       { new: true, runValidators: true }
     );
@@ -305,9 +307,9 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a product
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json({ message: 'Product deleted' });
   } catch (err) {
@@ -316,9 +318,9 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Add a batch to a product
-router.post('/:id/batches', async (req, res) => {
+router.post('/:id/batches', protect, async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ _id: req.params.id, userId: req.user._id });
     if (!product) return res.status(404).json({ message: 'Product not found' });
     
     product.batches.push(req.body);
@@ -330,9 +332,9 @@ router.post('/:id/batches', async (req, res) => {
 });
 
 // Delete a batch
-router.delete('/:id/batches/:batchId', async (req, res) => {
+router.delete('/:id/batches/:batchId', protect, async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ _id: req.params.id, userId: req.user._id });
     if (!product) return res.status(404).json({ message: 'Product not found' });
     
     product.batches = product.batches.filter(b => b.batchId !== req.params.batchId && b._id?.toString() !== req.params.batchId);
@@ -344,9 +346,9 @@ router.delete('/:id/batches/:batchId', async (req, res) => {
 });
 
 // Mark a batch as waste
-router.post('/:id/batches/:batchId/waste', async (req, res) => {
+router.post('/:id/batches/:batchId/waste', protect, async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ _id: req.params.id, userId: req.user._id });
     if (!product) return res.status(404).json({ message: 'Product not found' });
     
     const batchIndex = product.batches.findIndex(b => b.batchId === req.params.batchId || b._id?.toString() === req.params.batchId);
@@ -358,6 +360,7 @@ router.post('/:id/batches/:batchId/waste', async (req, res) => {
 
     // Log the waste
     const wasteEntry = new Waste({
+      userId: req.user._id,
       productName: product.name,
       productId: product._id,
       batchId: req.params.batchId,

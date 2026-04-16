@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Sale = require('../models/Sale');
 const Product = require('../models/Product');
+const { protect } = require('../middleware/authMiddleware');
+
+router.use(protect);
 
 const gracePeriodMap = {
   'Dairy': 2,
@@ -16,7 +19,7 @@ const gracePeriodMap = {
 // Get all sales
 router.get('/', async (req, res) => {
   try {
-    const sales = await Sale.find().sort({ createdAt: -1 });
+    const sales = await Sale.find({ userId: req.user._id }).sort({ createdAt: -1 });
     const mapped = sales.map(s => ({
       ...s._doc,
       id: s._id.toString()
@@ -33,7 +36,7 @@ router.post('/', async (req, res) => {
     const { productName, quantity } = req.body;
     
     // Find product
-    const product = await Product.findOne({ name: productName });
+    const product = await Product.findOne({ name: productName, userId: req.user._id });
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
     let remainingToDeduct = quantity;
@@ -102,6 +105,7 @@ router.post('/', async (req, res) => {
 
     // Create the sale
     const sale = new Sale({
+      userId: req.user._id,
       productName,
       productId: product._id,
       quantity,

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const supplierSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
   name: { type: String, required: true },
   contactPerson: { type: String },
   email: { type: String, required: true },

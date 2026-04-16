@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Supplier = require('../models/Supplier');
+const { protect } = require('../middleware/authMiddleware');
+
+router.use(protect);
 
 // Get all suppliers
 router.get('/', async (req, res) => {
   try {
-    const suppliers = await Supplier.find().sort({ createdAt: -1 });
+    const suppliers = await Supplier.find({ userId: req.user._id }).sort({ createdAt: -1 });
     const mapped = suppliers.map(s => ({
       ...s._doc,
       id: s._id.toString()
@@ -19,7 +22,7 @@ router.get('/', async (req, res) => {
 // Create a supplier
 router.post('/', async (req, res) => {
   try {
-    const supplier = new Supplier(req.body);
+    const supplier = new Supplier({ ...req.body, userId: req.user._id });
     const savedSupplier = await supplier.save();
     res.status(201).json({
       ...savedSupplier._doc,
@@ -33,8 +36,8 @@ router.post('/', async (req, res) => {
 // Update a supplier
 router.put('/:id', async (req, res) => {
   try {
-    const updatedSupplier = await Supplier.findByIdAndUpdate(
-      req.params.id, 
+    const updatedSupplier = await Supplier.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id }, 
       req.body, 
       { new: true, runValidators: true }
     );
@@ -51,7 +54,7 @@ router.put('/:id', async (req, res) => {
 // Delete a supplier
 router.delete('/:id', async (req, res) => {
   try {
-    const supplier = await Supplier.findByIdAndDelete(req.params.id);
+    const supplier = await Supplier.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     if (!supplier) return res.status(404).json({ message: 'Supplier not found' });
     res.json({ message: 'Supplier deleted' });
   } catch (err) {
