@@ -10,6 +10,7 @@ export default function Sales() {
   
   const [selectedProduct, setSelectedProduct] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [customerName, setCustomerName] = useState('');
 
   const loadData = async () => {
     try {
@@ -38,11 +39,13 @@ export default function Sales() {
     try {
       await api.post('/sales', { 
         productName: selectedProduct, 
-        quantity: Number(quantity) 
+        quantity: Number(quantity),
+        customerName: customerName.trim() || 'In-Store Walk-in'
       });
       alert(`Recorded sale: ${selectedProduct} x${quantity}`);
       setSelectedProduct('');
       setQuantity('');
+      setCustomerName('');
       loadData(); // Reload to get updated sales and inventory
     } catch (err) {
       alert(err.message || 'Error recording sale');
@@ -145,6 +148,16 @@ export default function Sales() {
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-400"
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Customer Name (Optional)</label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="e.g. John Doe"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-400"
+              />
+            </div>
             <button
               type="submit"
               disabled={loading || products.length === 0}
@@ -164,6 +177,7 @@ export default function Sales() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-100 text-left text-xs text-slate-500 uppercase">
+              <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Product</th>
               <th className="px-4 py-3">Quantity</th>
               <th className="px-4 py-3">Amount</th>
@@ -173,14 +187,19 @@ export default function Sales() {
           <tbody>
             {salesRecords.slice(0, 10).map((s) => (
               <tr key={s.id || s._id} className="border-b border-slate-50 hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-800">{s.productName}</td>
+                <td className="px-4 py-3 font-medium text-slate-800">
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${s.customerName === 'In-Store Walk-in' ? 'bg-slate-100 text-slate-600' : 'bg-green-100 text-green-700'}`}>
+                    {s.customerName || 'App Customer'}
+                  </span>
+                </td>
+                <td className="px-4 py-3 font-medium text-slate-700">{s.productName}</td>
                 <td className="px-4 py-3 text-slate-600">{s.quantity}</td>
                 <td className="px-4 py-3 text-blue-600 font-medium">₹{s.amount.toLocaleString()}</td>
                 <td className="px-4 py-3 text-slate-500">{new Date(s.createdAt).toLocaleString()}</td>
               </tr>
             ))}
             {salesRecords.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-10 text-center text-slate-500 border-dashed border-2">📊 No sales data yet. Start adding sales to track performance.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-slate-500 border-dashed border-2">📊 No sales data yet. Start adding sales to track performance.</td></tr>
             )}
           </tbody>
         </table>

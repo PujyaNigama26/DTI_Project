@@ -17,7 +17,7 @@ const gracePeriodMap = {
 // Public endpoint for Flutter app to record purchases
 router.post('/flutter-purchase', async (req, res) => {
   try {
-    const { storeId, productName, quantity, soldAtPrice } = req.body;
+    const { storeId, productName, quantity, soldAtPrice, customerName } = req.body;
     
     if (!storeId || !productName || !quantity) {
       return res.status(400).json({ message: 'Missing required fields: storeId, productName, or quantity' });
@@ -97,6 +97,7 @@ router.post('/flutter-purchase', async (req, res) => {
     // Create the sale
     const sale = new Sale({
       userId: storeId,
+      customerName: customerName || 'App Customer',
       productName,
       productId: product._id,
       quantity,
@@ -133,7 +134,7 @@ router.get('/', async (req, res) => {
 // Record a new sale with FIFO deduction from batches
 router.post('/', async (req, res) => {
   try {
-    const { productName, quantity } = req.body;
+    const { productName, quantity, customerName } = req.body;
     
     // Find product
     const product = await Product.findOne({ name: productName, userId: req.user._id });
@@ -206,6 +207,7 @@ router.post('/', async (req, res) => {
     // Create the sale
     const sale = new Sale({
       userId: req.user._id,
+      customerName: customerName || 'In-Store Walk-in',
       productName,
       productId: product._id,
       quantity,
