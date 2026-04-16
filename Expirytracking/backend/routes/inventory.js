@@ -198,6 +198,73 @@ router.get('/discounts', async (req, res) => {
   }
 });
 
+// Bridge for Flutter App: Returns Deals in the format the Flutter app's Deal.js expects
+router.get('/flutter-deals', async (req, res) => {
+  try {
+    const products = await Product.find();
+    
+    const flutterDeals = [];
+
+    products.forEach(rawProduct => {
+      const item = ensureBatches(rawProduct._doc);
+      
+      item.batches.forEach(b => {
+        if (b.quantity <= 0 || b.isExpired) return;
+
+        const P_base = parseFloat(b.unitSellingPrice);
+        const C_a = parseFloat(b.unitCostPrice);
+        const P_max = P_base;
+        const P_min = C_a; 
+
+        let suggestedPrice = P_base;
+
+        if (b.isInGracePeriod) {
+            suggestedPrice = C_a;
+        } else {
+            const I_c = b.quantity; 
+            const daysLeft = b.daysLeft;
+
+            if (daysLeft > 0) {
+              const markdownHorizon = 7; 
+              if (daysLeft <= markdownHorizon) {
+                const timeUrgency = (markdownHorizon - daysLeft) / markdownHorizon;
+                const baselineQuantity = 50;
+                const volumeUrgency = Math.min(1, I_c / baselineQuantity);
+                
+                let severityRatio = (timeUrgency * 0.7) + (volumeUrgency * 0.3);
+                severityRatio = Math.min(1, Math.max(0, severityRatio));
+                
+                suggestedPrice = P_max - ((P_max - P_min) * severityRatio);
+              }
+            }
+        }
+
+        suggestedPrice = Math.max(suggestedPrice, C_a);
+        const finalSuggestedPrice = Number(suggestedPrice.toFixed(2));
+
+        // The Flutter App expects specific fields according to the screenshot
+        if (b.daysLeft <= 14 || b.isInGracePeriod) {
+            flutterDeals.push({
+              _id: `${item.id}-${b.batchId || b._id}`, // Just an ID for Flutter to identify it
+              storeId: "STORE_1", // You can change this if you have multiple stores later
+              productName: item.name,
+              category: item.category,
+              originalPrice: P_base,
+              discountedPrice: finalSuggestedPrice,
+              expiryDate: new Date(b.expiryDate), // Flutter usually expects an ISO Date string or Date object
+              stockCount: b.quantity,
+              isActive: true
+            });
+        }
+      });
+    });
+
+    res.json(flutterDeals);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Create a product
 router.post('/', async (req, res) => {
   try {
