@@ -1,6 +1,7 @@
 // Central config for API requests
 
-const API_BASE_URL = 'http://localhost:8080/api'; // Replace with your actual backend URL
+// Point the frontend to our new Render Cloud Backend!
+const API_BASE_URL = 'https://expirysmart.onrender.com/api'; 
 
 export const api = {
   get: async (endpoint) => {
