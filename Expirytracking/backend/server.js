@@ -10,7 +10,7 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'] })); // Allow React Frontend to connect
+app.use(cors()); // Allow anywhere (Flutter App, React Frontend, etc.) to connect
 app.use(express.json());
 
 // Routes
@@ -18,14 +18,16 @@ app.use('/api/auth', authRoutes);
 const inventoryRoutes = require('./routes/inventory');
 const supplierRoutes = require('./routes/suppliers');
 const salesRoutes = require('./routes/sales');
+const storeRoutes = require('./routes/store');
 
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/sales', salesRoutes);
+app.use('/api/store', storeRoutes);
 
 // Health Check
 app.get('/', (req, res) => {
-  res.send('ExpiryTrack API is running...');
+  res.send('ExpirySmart API is running...');
 });
 
 // Error handling fallback

@@ -70,7 +70,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-colors"
-                placeholder="admin@expirytrack.com"
+                placeholder="admin@expirysmart.com"
               />
             </div>
           </div>

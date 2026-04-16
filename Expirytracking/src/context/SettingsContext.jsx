@@ -1,26 +1,48 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '../api';
 
 const SettingsContext = createContext();
 
 const defaultSettings = {
-  storeName: 'Sharma General Store',
-  contact: '+91 98765 43210',
-  address: '12, Gandhi Nagar, New Delhi - 110001',
-  email: 'sharma.store@gmail.com',
+  storeName: 'My Store',
+  contact: '',
+  address: '',
+  email: '',
 };
 
 export function SettingsProvider({ children }) {
-  const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('storeSettings');
-    return saved ? JSON.parse(saved) : defaultSettings;
-  });
+  const [settings, setSettings] = useState(defaultSettings);
 
+  // Fetch settings from API on load
   useEffect(() => {
-    localStorage.setItem('storeSettings', JSON.stringify(settings));
-  }, [settings]);
+    const fetchSettings = async () => {
+      try {
+        const data = await api.get('/store');
+        if (data && data.storeName) {
+          setSettings({
+            storeName: data.storeName,
+            contact: data.contact,
+            address: data.address,
+            email: data.email
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load store settings:', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
-  const updateSettings = (newSettings) => {
-    setSettings(newSettings);
+  const updateSettings = async (newSettings) => {
+    try {
+      // Save directly to API
+      await api.put('/store', newSettings);
+      setSettings(newSettings);
+    } catch (err) {
+      console.error('Failed to save store settings:', err);
+      // Still update local state so UI feels responsive
+      setSettings(newSettings);
+    }
   };
 
   return (

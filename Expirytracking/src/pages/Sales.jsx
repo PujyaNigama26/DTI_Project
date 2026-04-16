@@ -82,7 +82,7 @@ export default function Sales() {
   return (
     <div className="p-4 lg:p-6 space-y-6">
       <div>
-        <h1 className="text-lg font-semibold text-slate-800">Sales</h1>
+        <h1 className="text-xl font-semibold text-slate-800">🛒 Sales</h1>
         <p className="text-sm text-slate-500">Track current sales and record new transactions</p>
       </div>
 
@@ -180,7 +180,7 @@ export default function Sales() {
               </tr>
             ))}
             {salesRecords.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400">No sales transactions yet.</td></tr>
+              <tr><td colSpan={4} className="px-4 py-10 text-center text-slate-500 border-dashed border-2">📊 No sales data yet. Start adding sales to track performance.</td></tr>
             )}
           </tbody>
         </table>

@@ -22,24 +22,43 @@ export default function Alerts() {
         today.setHours(0, 0, 0, 0);
 
         products.forEach(p => {
-          const expDate = new Date(p.expiryDate);
-          const diffTime = expDate - today;
-          const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          if (!p.batches || p.batches.length === 0) return;
 
-          if (daysLeft <= 0) {
-            generated.push({ id: `exp-${p.id}`, type: 'error', message: `${p.name} has EXPIRED as of ${p.expiryDate}!` });
-          } else if (daysLeft <= 7) {
-            generated.push({ id: `warn-${p.id}`, type: 'warning', message: `${p.name} is expiring in ${daysLeft} days! (${p.expiryDate})` });
-          }
+          let productTotalQty = 0;
+          
+          p.batches.forEach(b => {
+             productTotalQty += b.quantity;
+             if (b.quantity <= 0) return;
+             
+             const expDate = new Date(b.expiryDate);
+             const diffTime = expDate - today;
+             const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+             
+             const dd = String(expDate.getDate()).padStart(2, '0');
+             const mm = String(expDate.getMonth() + 1).padStart(2, '0');
+             const yyyy = expDate.getFullYear();
+             const batchName = `Batch ${dd}${mm}${yyyy}`;
+             
+             if (daysLeft <= 0) {
+               generated.push({ id: `exp-${p.id}-${b.batchId}`, type: 'error', message: `❌ EXPIRED: ${batchName} of ${p.name} as of ${b.expiryDate}!`, priority: 3 });
+             } else if (daysLeft <= 3) {
+               generated.push({ id: `warn-${p.id}-${b.batchId}`, type: 'error', message: `⚠ URGENT: ${batchName} of ${p.name} — ${daysLeft} Days Left!`, priority: 2 });
+             } else if (daysLeft <= 7) {
+               generated.push({ id: `warn-${p.id}-${b.batchId}`, type: 'warning', message: `⏳ WARNING: ${batchName} of ${p.name} — ${daysLeft} Days Left!`, priority: 1 });
+             }
+          });
 
-          if (p.quantity < 5) {
-            generated.push({ id: `stock-${p.id}`, type: 'info', message: `${p.name} is running low on stock (Only ${p.quantity} left).` });
+          if (productTotalQty > 0 && productTotalQty < 5) {
+            generated.push({ id: `stock-${p.id}`, type: 'info', message: `${p.name} is running critically low on total stock (Only ${productTotalQty} left).`, priority: 0 });
           }
         });
 
+        // Sort by priority (highest first)
+        generated.sort((a,b) => b.priority - a.priority);
+
         // Add a success alert if everything is perfectly fine
         if (generated.length === 0) {
-           generated.push({ id: 'all-good', type: 'success', message: 'All inventory is well-stocked and safe from expiry!' });
+           generated.push({ id: 'all-good', type: 'success', message: 'All inventory batches are well-stocked and safe from expiry!' });
         }
 
         setAlerts(generated);
@@ -59,7 +78,7 @@ export default function Alerts() {
   return (
     <div className="p-4 lg:p-6 space-y-4">
       <div>
-        <h1 className="text-lg font-semibold text-slate-800">Alerts</h1>
+        <h1 className="text-xl font-semibold text-slate-800">🔔 Alerts</h1>
         <p className="text-sm text-slate-500">{alerts.length} active notifications</p>
       </div>
 

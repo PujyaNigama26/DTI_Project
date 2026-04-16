@@ -1,0 +1,26 @@
+[
+  {
+    "id": "69c7c0456bf7a44ba153eb7a",
+    "product": "chupa chips",
+    "daysLeft": 1,
+    "suggestedDiscount": 38,
+    "originalPrice": 20,
+    "priceAfterDiscount": 12.5
+  },
+  {
+    "id": "69c6843a903b04efbd30cbf3",
+    "product": "Dairy Milk",
+    "daysLeft": 2,
+    "suggestedDiscount": 30,
+    "originalPrice": 100,
+    "priceAfterDiscount": 70.2
+  },
+  {
+    "id": "69c7bfdf6bf7a44ba153eb6b",
+    "product": "good day",
+    "daysLeft": 2,
+    "suggestedDiscount": 40,
+    "originalPrice": 25,
+    "priceAfterDiscount": 15
+  }
+]

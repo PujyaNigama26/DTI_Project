@@ -45,7 +45,7 @@ export default function TopBar({ onMenuClick }) {
             <User size={16} className="text-blue-600" />
           </div>
           <span className="hidden sm:block text-sm font-medium text-slate-700">
-            {user?.name || 'Admin'}
+            👋 Welcome, {user?.name || 'Admin'}
           </span>
         </div>
         <button 

@@ -1,0 +1,12 @@
+const mongoose = require('mongoose');
+
+const wasteSchema = new mongoose.Schema({
+  productName: { type: String, required: true },
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  batchId: { type: String, required: true },
+  quantity: { type: Number, required: true },
+  lossAmount: { type: Number, required: true },
+  dateLogged: { type: Date, default: Date.now }
+});
+
+module.exports = mongoose.model('Waste', wasteSchema);

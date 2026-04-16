@@ -8,11 +8,7 @@ import ExpiryTracking from './pages/ExpiryTracking';
 import Discounts from './pages/Discounts';
 import Sales from './pages/Sales';
 import Alerts from './pages/Alerts';
-import Analytics from './pages/Analytics';
 import WasteAnalysis from './pages/WasteAnalysis';
-import Categories from './pages/Categories';
-import Suppliers from './pages/Suppliers';
-import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
 import Login from './pages/Login';
@@ -44,15 +40,14 @@ function DashboardLayout() {
             <Route path="/discounts" element={<Discounts />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/alerts" element={<Alerts />} />
-            <Route path="/analytics" element={<Analytics />} />
             <Route path="/waste" element={<WasteAnalysis />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/suppliers" element={<Suppliers />} />
-            <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/help" element={<Help />} />
           </Routes>
         </main>
+        <footer className="bg-white border-t border-slate-200 p-3 text-center text-xs text-slate-500 z-10 hidden md:block">
+          ExpirySmart v1.0 | Smart Inventory & Expiry Management System
+        </footer>
       </div>
     </div>
   );

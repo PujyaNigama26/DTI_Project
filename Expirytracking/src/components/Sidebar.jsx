@@ -1,24 +1,16 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard, Package, Clock, Tag, ShoppingCart,
-  Bell, BarChart2, Trash2, Grid, Truck, FileText,
-  Settings, HelpCircle, X
-} from 'lucide-react';
+import { Package, X } from 'lucide-react';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/inventory', label: 'Inventory', icon: Package },
-  { to: '/expiry', label: 'Expiry Tracking', icon: Clock },
-  { to: '/discounts', label: 'Discounts', icon: Tag },
-  { to: '/sales', label: 'Sales', icon: ShoppingCart },
-  { to: '/alerts', label: 'Alerts', icon: Bell },
-  { to: '/analytics', label: 'Analytics', icon: BarChart2 },
-  { to: '/waste', label: 'Waste Analysis', icon: Trash2 },
-  { to: '/categories', label: 'Categories', icon: Grid },
-  { to: '/suppliers', label: 'Suppliers', icon: Truck },
-  { to: '/reports', label: 'Reports', icon: FileText },
-  { to: '/settings', label: 'Settings', icon: Settings },
-  { to: '/help', label: 'Help', icon: HelpCircle },
+  { to: '/', label: '📊 Dashboard' },
+  { to: '/inventory', label: '📦 Inventory' },
+  { to: '/expiry', label: '⏳ Expiry Tracking' },
+  { to: '/discounts', label: '💸 Discounts' },
+  { to: '/sales', label: '🛒 Sales' },
+  { to: '/alerts', label: '🔔 Alerts' },
+  { to: '/waste', label: '🗑️ Waste Analysis' },
+  { to: '/settings', label: '⚙️ Settings' },
+  { to: '/help', label: '❓ Help' },
 ];
 
 export default function Sidebar({ open, onClose }) {
@@ -46,7 +38,7 @@ export default function Sidebar({ open, onClose }) {
             <div className="w-7 h-7 bg-blue-600 rounded-md flex items-center justify-center">
               <Package size={15} className="text-white" />
             </div>
-            <span className="font-semibold text-slate-800 text-sm">ExpiryTrack</span>
+            <span className="font-semibold text-slate-800 text-sm">ExpirySmart</span>
           </div>
           <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-slate-600">
             <X size={18} />
@@ -55,7 +47,7 @@ export default function Sidebar({ open, onClose }) {
 
         {/* Nav Items */}
         <nav className="flex-1 overflow-y-auto py-3 px-3">
-          {navItems.map(({ to, label, icon: Icon }) => (
+          {navItems.map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -69,7 +61,6 @@ export default function Sidebar({ open, onClose }) {
                 }`
               }
             >
-              <Icon size={16} />
               {label}
             </NavLink>
           ))}
