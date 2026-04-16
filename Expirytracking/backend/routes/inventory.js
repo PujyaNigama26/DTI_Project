@@ -255,7 +255,7 @@ router.get('/flutter-deals', async (req, res) => {
         if (b.daysLeft <= 14 || b.isInGracePeriod) {
             flutterDeals.push({
               _id: `${item.id}-${b.batchId || b._id}`, // Just an ID for Flutter to identify it
-              storeId: req.query.storeId || "GLOBAL",
+              storeId: item.userId || "UNKNOWN_STORE", // Critical: Must return the real MongoDB User ID so purchases can route back properly
               storeLocation: storeInfo ? (storeInfo.storeLocation || storeInfo.address) : "Unknown Location",
               storeName: storeInfo ? storeInfo.storeName : "Unknown Store",
               productName: item.name,
